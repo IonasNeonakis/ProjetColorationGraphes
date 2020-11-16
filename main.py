@@ -34,7 +34,7 @@ def parse_graph(filename):
 def degree(graph, vertex):
     return len(graph[vertex])
 
-def neighbourhood_colors(neighbours, vertex, coloring):
+def neighbourhood_colors(neighbours, coloring):
     used_colors = set()
    
     for v in neighbours:
@@ -49,8 +49,7 @@ def init_colors(graph):
         coloring[v] = next(iter(AVAILABLE_COLORS))
     return coloring
 
-def coloring_rec(graph):
-    coloring = init_colors(graph)
+def coloring_rec(graph, coloring):
 
     if graph:
         for vertex in graph:
@@ -60,22 +59,22 @@ def coloring_rec(graph):
 
         deg_x = degree(graph, x)
         neighbours = graph.pop(x, None)
-        coloring_res = coloring_rec(graph)
+        coloring_res = coloring_rec(graph, coloring)
 
         if deg_x < 5:
             # On applique la brique 4
             if coloring_res:
                 # On aura au minimum une couleur dans l'ensemble remaining_colors car il y a 5 couleurs et x a 4 voisins.
-                remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours, x, coloring_res)
-                coloring[x] = remaining_colors[0]
+                remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours, coloring_res)
+                coloring[x] = next(iter(remaining_colors))
         elif deg_x == 5:
             # On applique la brique 5 ou la brique 6
-            used_colors = neighbourhood_colors(neighbours, x, coloring_res)
+            used_colors = neighbourhood_colors(neighbours, coloring_res)
             # On a seulement 5 couleurs différentes, donc si le nombre de couleur utilisées n'est pas < à 5, il est forcément égal.
             if len(used_colors) < 5:
                 # On applique la brique 5
-                remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours, x, coloring_res)
-                coloring[x] = remaining_colors[0]
+                remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours, coloring_res)
+                coloring[x] = next(iter(remaining_colors))
             else:
                 # On applique la brique 6
                 alpha   = coloring[graph[x][0]]
@@ -100,7 +99,8 @@ def check_coloring(graph, coloring):
 
 def main():
     graph = parse_graph('JoliGraphe10.graphe')
-    print(coloring_rec(graph))
+    print(coloring_rec(graph, init_colors(graph)))
+    print(check_coloring(graph, coloring_rec(graph, init_colors(graph))))
 
 
 if __name__ == "__main__":
