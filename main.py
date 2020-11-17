@@ -1,3 +1,5 @@
+from collections import deque
+
 RES_DIR = "res/"
 AVAILABLE_COLORS = set(['blue', 'red', 'green', 'white', 'black'])
 
@@ -19,9 +21,9 @@ def parse_graph(filename):
         splitted = clean_string(lines[i]).split(':')
         vertex = splitted[0]
         edges = []
-        for c in splitted[1].strip():
-            if(c.isalnum()):
-                edges.append(c)
+        for s in splitted[1].strip()[1:-1].split(','):
+            if(s.strip().isalnum()):
+                edges.append(s.strip())
         graph[vertex] = edges
 
     f.close()
@@ -42,11 +44,57 @@ def neighbourhood_colors(neighbours, coloring):
 
     return used_colors
 
+def remove_vertex(graph, vertex):
+    for v in graph:
+        if vertex in graph[v]:
+            graph[v].remove(vertex)
+            
+    return graph.pop(vertex)
+
 # Initie la couleur de chaque sommet à une couleur au 'hasard'
 def init_colors(graph):
     coloring = {}
     for v in graph.keys():
         coloring[v] = next(iter(AVAILABLE_COLORS))
+    return coloring
+
+def get_path(graph, starting_vertex, vertex_to_find):
+    visited = []
+    queue = deque()
+    queue.append(starting_vertex)
+
+    while(queue):
+        vertex = queue.popleft()
+        if vertex not in visited:
+            if vertex == vertex_to_find:
+                return True
+            else:
+                visited.append(vertex)
+                unvisited = [v1 for v1 in graph[vertex] if v1 not in visited]
+                queue.extend(unvisited)
+    
+    return False
+
+def breadth_first_search(graph, starting_vertex):
+    visited = []
+    queue = deque()
+    queue.append(starting_vertex)
+
+    while(queue):
+        vertex = queue.popleft()
+        if vertex not in visited:
+            visited.append(vertex)
+            unvisited = [v1 for v1 in graph[vertex] if v1 not in visited]
+            queue.extend(unvisited)
+    
+    return visited
+
+def inverse_color(graph, coloring, color_a, color_b):
+    for vertex in graph:
+        if coloring[vertex] == color_a:
+            coloring[vertex] = color_b
+        else:
+            coloring[vertex] = color_a
     return coloring
 
 def coloring_rec(graph, coloring):
@@ -56,9 +104,8 @@ def coloring_rec(graph, coloring):
             if degree(graph, vertex) <= 5:
                 x = vertex
                 break
-
         deg_x = degree(graph, x)
-        neighbours = graph.pop(x, None)
+        neighbours = remove_vertex(graph, x)
         coloring_res = coloring_rec(graph, coloring)
 
         if deg_x < 5:
@@ -77,14 +124,37 @@ def coloring_rec(graph, coloring):
                 coloring[x] = next(iter(remaining_colors))
             else:
                 # On applique la brique 6
-                alpha   = coloring[graph[x][0]]
-                beta    = coloring[graph[x][1]]
-                gamma   = coloring[graph[x][2]]
-                delta   = coloring[graph[x][3]]
-                epsilon = coloring[graph[x][4]]
+                a = neighbours[0]
+                b = neighbours[1]
+                c = neighbours[2]
+                d = neighbours[3]
+                e = neighbours[4]
 
-                return coloring
+                alpha   = coloring[a]
+                beta    = coloring[b]
+                gamma   = coloring[c]
+                delta   = coloring[d]
+                epsilon = coloring[e]
 
+                induced_subgraph_ag = {}
+                induced_subgraph_bd = {}
+
+                for k,v in graph.items():
+                    if coloring_res[k] == alpha or coloring_res[k] == gamma:
+                        induced_subgraph_ag[k] = v
+                    if coloring_res[k] == beta or coloring_res[k] == delta:
+                         induced_subgraph_bd[k] = v
+
+                if get_path(induced_subgraph_ag, a, c):
+                    connected_component = breadth_first_search(induced_subgraph_bd, b)
+                    new_coloring = inverse_color(connected_component, coloring_res, beta, delta)
+                else:
+                    connected_component = breadth_first_search(induced_subgraph_ag, a)
+                    new_coloring = inverse_color(connected_component, coloring_res, alpha, gamma)
+
+                # On applique la brique 5
+                remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours, new_coloring)
+                coloring[x] = next(iter(remaining_colors))
 
     return coloring
 
@@ -98,9 +168,13 @@ def check_coloring(graph, coloring):
     return True
 
 def main():
-    graph = parse_graph('JoliGraphe10.graphe')
-    print(coloring_rec(graph, init_colors(graph)))
-    print(check_coloring(graph, coloring_rec(graph, init_colors(graph))))
+    graph = parse_graph('JoliGraphe100.graphe')
+    colors = coloring_rec(graph, init_colors(graph))
+
+    if check_coloring(graph, colors):
+        print('Voici la coloration trouvée : \n\n', colors)
+    else:
+        print('Pas de coloration trouvée !')
 
 
 if __name__ == "__main__":
