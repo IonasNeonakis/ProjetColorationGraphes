@@ -152,7 +152,6 @@ def coloring_rec(graph, coloring):
                     connected_component = breadth_first_search(induced_subgraph_ag, a)
                     new_coloring = inverse_color(connected_component, coloring_res, alpha, gamma)
 
-                # On applique la brique 5
                 remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours, new_coloring)
                 coloring[x] = next(iter(remaining_colors))
 
