@@ -2,7 +2,7 @@ from collections import deque
 import os
 import sys
 import os.path
-
+import copy
 
 
 RES_DIR = "res/"
@@ -40,7 +40,7 @@ def parse_graph(filename):
         for s in splitted[1].strip()[1:-1].split(','):
             if s.strip().isalnum():
                 edges.append(s.strip())
-        graph[vertex] = edges.copy()
+        graph[vertex] = edges
 
     f.close()
 
@@ -251,7 +251,7 @@ def write_file(file_name, colors):
 def generate_dot(file_name, dict_colors, dict_links, dict_coords):
     f = open(OUT_DIR + file_name + '.dot', 'w+')
 
-    f.write('graph {\n')
+    f.write('strict graph {\n')
     f.write('\t{\n')
     for k, color in dict_colors.items(): # pos="0,0!""
         posx, posy = dict_coords[k]
@@ -269,20 +269,18 @@ def generate_dot(file_name, dict_colors, dict_links, dict_coords):
     print("Génération términée.")
 
 
-
 def main():
     if len(sys.argv) == 2 :
         nom_fichier = sys.argv[1]
         graph = parse_graph(nom_fichier+'.graphe')
-        graph1 = graph.copy()
+        graph1 = copy.deepcopy(graph)
         colors = coloring_rec(graph, init_colors(graph))
         coords = parse_graph_coords(nom_fichier+'.coords')
-
-        print(graph1)
 
         if check_coloring(graph, colors):
             
             print('Voici la coloration trouvée : \n\n', colors)
+            print()
             write_file(nom_fichier, colors)
             generate_dot(nom_fichier, colors, graph1, coords)
         else:
