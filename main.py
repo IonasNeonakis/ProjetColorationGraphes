@@ -1,4 +1,9 @@
 from collections import deque
+import os
+import sys
+import os.path
+
+
 
 RES_DIR = "res/"
 OUT_DIR = "out/"
@@ -14,7 +19,13 @@ def clean_string(s):
 def parse_graph(filename):
     graph = {}
     graphLength = -1
-    f = open(RES_DIR + filename, 'r')
+    nom_complet = RES_DIR + filename
+    if not os.path.isfile(nom_complet):
+        print('Le fichier ' + nom_complet + ' n\'éxiste pas')
+        exit()
+
+    f = open(nom_complet, 'r')
+    
     lines = f.readlines()
 
     if clean_string(lines[0]).isdigit():
@@ -29,13 +40,47 @@ def parse_graph(filename):
         for s in splitted[1].strip()[1:-1].split(','):
             if s.strip().isalnum():
                 edges.append(s.strip())
-        graph[vertex] = edges
+        graph[vertex] = edges.copy()
 
     f.close()
 
     if graphLength != len(graph):
         raise BaseException('La taille entrée en début de fichier ne correspond pas au graphe donné.')
 
+    return graph
+
+
+# Retourne les coordonnes d'un graphe à partir d'un fichier .coords qui se trouve dans RES_DIR
+def parse_graph_coords(filename):
+    graph = {}
+    graphLength = -1
+
+    nom_complet = RES_DIR + filename
+    if not os.path.isfile(nom_complet):
+        print('Le fichier ' + nom_complet + ' n\'éxiste pas')
+        exit()
+    
+    f = open(nom_complet, 'r')
+    lines = f.readlines()
+
+    if clean_string(lines[0]).isdigit():
+        graphLength = int(clean_string(lines[0]))
+    else:
+        raise BaseException('Le fichier doit commencer par la longueur du graphe.')
+
+    for i in range(1, len(lines)):
+        splitted = clean_string(lines[i]).split(':')
+        vertex = splitted[0]
+        coords = []
+        for s in splitted[1].strip()[1:-1].split(','):
+            if s.strip().isalnum():
+                coords.append(s.strip())
+        graph[vertex] = coords
+
+    f.close()
+
+    if graphLength != len(graph):
+        raise BaseException('La taille entrée en début de fichier ne correspond pas au graphe donné.')
     return graph
 
 
@@ -193,7 +238,7 @@ def check_coloring(graph, coloring):
     return True
 
 
-# méthode qui prend une coloration d'un graphe et qui l'écrit dans un fichier .colors dans OUT_DIR
+# Prend une coloration d'un graphe et qui l'écrit dans un fichier .colors dans OUT_DIR
 def write_file(file_name, colors):
     f = open(OUT_DIR + file_name + '.colors', 'w+')
     f.write(str(len(colors)) + '\n')
@@ -202,15 +247,48 @@ def write_file(file_name, colors):
     f.close()
 
 
-def main():
-    graph = parse_graph('JoliGraphe100.graphe')
-    colors = coloring_rec(graph, init_colors(graph))
+# Crée un .dot
+def generate_dot(file_name, dict_colors, dict_links, dict_coords):
+    f = open(OUT_DIR + file_name + '.dot', 'w+')
 
-    if check_coloring(graph, colors):
-        write_file('JoliGraphe100', colors)
-        print('Voici la coloration trouvée : \n\n', colors)
-    else:
-        print('Pas de coloration trouvée !')
+    f.write('graph {\n')
+    f.write('\t{\n')
+    for k, color in dict_colors.items(): # pos="0,0!""
+        posx, posy = dict_coords[k]
+        f.write('\t\t' + k + ' [fontcolor=pink style=filled fillcolor=' + color + ' pos="' + posx + "," + posy +'!"' + '];\n')
+    f.write('\t}\n')
+    for k, v in dict_links.items():
+        for neighbour in v:
+            f.write('\t' + k + ' -- ' + neighbour + ';\n')
+
+    f.write('}')
+    f.close()
+    print("Début de la generation de l'image du graphe...")
+    arg = 'dot -Kfdp -n -Tpng -o '+ OUT_DIR + file_name + '.png ' + OUT_DIR + file_name + '.dot'
+    os.system(arg)
+    print("Génération términée.")
+
+
+
+def main():
+    if len(sys.argv) == 2 :
+        nom_fichier = sys.argv[1]
+        graph = parse_graph(nom_fichier+'.graphe')
+        graph1 = graph.copy()
+        colors = coloring_rec(graph, init_colors(graph))
+        coords = parse_graph_coords(nom_fichier+'.coords')
+
+        print(graph1)
+
+        if check_coloring(graph, colors):
+            
+            print('Voici la coloration trouvée : \n\n', colors)
+            write_file(nom_fichier, colors)
+            generate_dot(nom_fichier, colors, graph1, coords)
+        else:
+            print('Pas de coloration trouvée !')
+    else: 
+        print("Veuillez passer le nom du fichier en paramètres ! ")
 
 
 if __name__ == "__main__":
