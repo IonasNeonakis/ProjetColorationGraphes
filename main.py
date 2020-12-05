@@ -1,8 +1,8 @@
 from collections import deque
+import copy
 import os
 import sys
 import os.path
-import copy
 
 
 RES_DIR = "res/"
@@ -18,7 +18,7 @@ def clean_string(s):
 # Retourne un graphe à partir d'un fichier .graphe qui se trouve dans RES_DIR
 def parse_graph(filename):
     graph = {}
-    graphLength = -1
+    graph_length = -1
     nom_complet = RES_DIR + filename
     if not os.path.isfile(nom_complet):
         print('Le fichier ' + nom_complet + ' n\'éxiste pas')
@@ -29,7 +29,7 @@ def parse_graph(filename):
     lines = f.readlines()
 
     if clean_string(lines[0]).isdigit():
-        graphLength = int(clean_string(lines[0]))
+        graph_length = int(clean_string(lines[0]))
     else:
         raise BaseException('Le fichier doit commencer par la longueur du graphe.')
 
@@ -44,43 +44,9 @@ def parse_graph(filename):
 
     f.close()
 
-    if graphLength != len(graph):
+    if graph_length != len(graph):
         raise BaseException('La taille entrée en début de fichier ne correspond pas au graphe donné.')
 
-    return graph
-
-
-# Retourne les coordonnes d'un graphe à partir d'un fichier .coords qui se trouve dans RES_DIR
-def parse_graph_coords(filename):
-    graph = {}
-    graphLength = -1
-
-    nom_complet = RES_DIR + filename
-    if not os.path.isfile(nom_complet):
-        print('Le fichier ' + nom_complet + ' n\'éxiste pas')
-        exit()
-    
-    f = open(nom_complet, 'r')
-    lines = f.readlines()
-
-    if clean_string(lines[0]).isdigit():
-        graphLength = int(clean_string(lines[0]))
-    else:
-        raise BaseException('Le fichier doit commencer par la longueur du graphe.')
-
-    for i in range(1, len(lines)):
-        splitted = clean_string(lines[i]).split(':')
-        vertex = splitted[0]
-        coords = []
-        for s in splitted[1].strip()[1:-1].split(','):
-            if s.strip().isalnum():
-                coords.append(s.strip())
-        graph[vertex] = coords
-
-    f.close()
-
-    if graphLength != len(graph):
-        raise BaseException('La taille entrée en début de fichier ne correspond pas au graphe donné.')
     return graph
 
 
@@ -111,8 +77,10 @@ def remove_vertex(graph, vertex):
 # Initie la couleur de chaque sommet à une couleur au 'hasard'. Chaque sommet aura la même couleur
 def init_colors(graph):
     coloring = {}
+
     for v in graph.keys():
         coloring[v] = next(iter(AVAILABLE_COLORS))
+
     return coloring
 
 
@@ -151,7 +119,7 @@ def breadth_first_search(graph, starting_vertex):
     return visited
 
 
-# Inverse les couleurs a et b d'un graphe. Coloring est les couleurs acctuelle du graphe
+# Inverse les couleurs a et b d'un graphe.'coloring' correspond aux couleurs actuelles du graphe
 def inverse_color(graph, coloring, color_a, color_b):
     for vertex in graph:
         if coloring[vertex] == color_a:
@@ -238,49 +206,56 @@ def check_coloring(graph, coloring):
     return True
 
 
-# Prend une coloration d'un graphe et qui l'écrit dans un fichier .colors dans OUT_DIR
+# Prend une coloration d'un graphe et l'écrit dans un fichier .colors qui se trouvera dans OUT_DIR
 def write_file(file_name, colors):
     f = open(OUT_DIR + file_name + '.colors', 'w+')
     f.write(str(len(colors)) + '\n')
+
     for k, v in colors.items():
         f.write(k + ': ' + v + '\n')
+
     f.close()
 
 
-# Crée un .dot
+# Crée un .dot en fonction des positions et des couleurs du graphe.
 def generate_dot(file_name, dict_colors, dict_links, dict_coords):
     f = open(OUT_DIR + file_name + '.dot', 'w+')
-
     f.write('strict graph {\n')
     f.write('\t{\n')
+
     for k, color in dict_colors.items(): # pos="0,0!""
         posx, posy = dict_coords[k]
         f.write('\t\t' + k + ' [fontcolor=pink style=filled fillcolor=' + color + ' pos="' + posx + "," + posy +'!"' + '];\n')
+    
     f.write('\t}\n')
+    
     for k, v in dict_links.items():
         for neighbour in v:
             f.write('\t' + k + ' -- ' + neighbour + ';\n')
 
     f.write('}')
     f.close()
+
     print("Début de la generation de l'image du graphe...")
+
     arg = 'dot -Kfdp -n -Tpng -o '+ OUT_DIR + file_name + '.png ' + OUT_DIR + file_name + '.dot'
     os.system(arg)
+
     print("Génération términée.")
 
 
 def main():
     if len(sys.argv) == 2 :
         nom_fichier = sys.argv[1]
-        graph = parse_graph(nom_fichier+'.graphe')
-        graph1 = copy.deepcopy(graph)
+        graph = parse_graph(nom_fichier + '.graphe')
+        graph1 = copy.deepcopy(graph) # on crée un second graphe qui est une copie du premier, car ce dernier sera consumé par coloring_rec
         colors = coloring_rec(graph, init_colors(graph))
-        coords = parse_graph_coords(nom_fichier+'.coords')
+        coords = parse_graph(nom_fichier + '.coords')
 
         if check_coloring(graph, colors):
-            
             print('Voici la coloration trouvée : \n\n', colors)
             print()
+
             write_file(nom_fichier, colors)
             generate_dot(nom_fichier, colors, graph1, coords)
         else:
