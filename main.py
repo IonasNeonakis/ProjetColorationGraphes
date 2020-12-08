@@ -84,7 +84,7 @@ def init_colors(graph):
     return coloring
 
 
-# Trouve un chemin d'un graphe, à partir de starting_vertex jusqu'à vertex_to_find
+# Teste si un chemin existe dans un graphe, à partir de starting_vertex jusqu'à vertex_to_find
 def get_path(graph, starting_vertex, vertex_to_find):
     visited = []
     queue = deque()
@@ -134,12 +134,12 @@ def coloring_rec(graph, coloring):
     if graph:
         for vertex in graph:
             if degree(graph, vertex) <= 5:
-                x = vertex  # on trouve un sommet de degré <= 5
+                x = vertex  # On trouve un sommet de degré <= 5
                 break
 
         deg_x = degree(graph, x)
-        neighbours = remove_vertex(graph, x)  # on supprime le sommet x et récupère son sommet
-        coloring_res = coloring_rec(graph, coloring)  # appel récursif
+        neighbours = remove_vertex(graph, x)  # On supprime le sommet x et récupère son sommet
+        coloring_res = coloring_rec(graph, coloring)  # Appel récursif
 
         if deg_x < 5:
             # On applique la brique 4
@@ -151,11 +151,11 @@ def coloring_rec(graph, coloring):
             # On applique la brique 5 ou la brique 6
             used_colors = neighbourhood_colors(neighbours, coloring_res)
             # On a seulement 5 couleurs différentes, donc si le nombre de couleur utilisées n'est pas < à 5, il est forcément égal.
-            if len(used_colors) < 5:
+            if len(used_colors) < 5: # S'il y a au moins une couleur disponbile
                 # On applique la brique 5
                 remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours, coloring_res)
                 coloring[x] = next(iter(remaining_colors))  # x prend la première couleur disponible
-            else:
+            else: # S'il n'y a pas de couleurs disponibles
                 # On applique la brique 6
                 a = neighbours[0]
                 b = neighbours[1]
@@ -169,29 +169,29 @@ def coloring_rec(graph, coloring):
                 delta = coloring[d]
                 epsilon = coloring[e]
 
-                induced_subgraph_ag = {}  # graphe induit de alpha gamma
-                induced_subgraph_bd = {}  # graphe induit de beta delta
+                induced_subgraph_ag = {}  # Graphe induit de alpha gamma
+                induced_subgraph_bd = {}  # Graphe induit de beta delta
 
-                for k, v in graph.items():  # on trouves les deux graphes induits
+                for k, v in graph.items():  # On trouves les deux graphes induits
                     if coloring_res[k] == alpha or coloring_res[k] == gamma:
                         induced_subgraph_ag[k] = v
                     if coloring_res[k] == beta or coloring_res[k] == delta:
                         induced_subgraph_bd[k] = v
 
-                if get_path(induced_subgraph_ag, a, c):  # s'il y a un chemin de a vers c
+                if get_path(induced_subgraph_ag, a, c):  # S'il y a un chemin de a vers c
                     connected_component = breadth_first_search(induced_subgraph_bd,
-                                                               b)  # on prend la composante connexe G'(beta, delta) qui contient b
+                                                               b)  # On prend la composante connexe G'(beta, delta) qui contient b
                     new_coloring = inverse_color(connected_component, coloring_res, beta,
-                                                 delta)  # on inverse les couleurs de G'(beta, delta)
+                                                 delta)  # On inverse les couleurs de G'(beta, delta)
                 else:  # S'il y a un chemin de b à d ou qu'il n'y a pas de chemin de a à c et de b à d
                     connected_component = breadth_first_search(induced_subgraph_ag,
-                                                               a)  # on prend la composante connexe G'(alpha, gamma) qui contient a
+                                                               a)  # On prend la composante connexe G'(alpha, gamma) qui contient a
                     new_coloring = inverse_color(connected_component, coloring_res, alpha,
-                                                 gamma)  # on inverse les couleurs de G'(alpha, gamma)
+                                                 gamma)  # On inverse les couleurs de G'(alpha, gamma)
 
                 remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours,
-                                                                           new_coloring)  # on récupère la couleur restante
-                coloring[x] = next(iter(remaining_colors))  # on la donne à x
+                                                                           new_coloring)  # On récupère la couleur restante
+                coloring[x] = next(iter(remaining_colors))  # On la donne à x
 
     return coloring
 
@@ -223,7 +223,7 @@ def generate_dot(file_name, dict_colors, dict_links, dict_coords):
     f.write('strict graph {\n')
     f.write('\t{\n')
 
-    for k, color in dict_colors.items(): # pos="0,0!""
+    for k, color in dict_colors.items():
         posx, posy = dict_coords[k]
         f.write('\t\t' + k + ' [fontcolor=pink style=filled fillcolor=' + color + ' pos="' + posx + "," + posy +'!"' + '];\n')
     

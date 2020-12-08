@@ -1,0 +1,46 @@
+strict graph {
+	{
+		0 [fontcolor=pink style=filled fillcolor=green pos="1,1!"];
+		1 [fontcolor=pink style=filled fillcolor=green pos="6,9!"];
+		2 [fontcolor=pink style=filled fillcolor=blue pos="10,9!"];
+		3 [fontcolor=pink style=filled fillcolor=black pos="7,3!"];
+		4 [fontcolor=pink style=filled fillcolor=green pos="8,4!"];
+		5 [fontcolor=pink style=filled fillcolor=blue pos="5,4!"];
+		6 [fontcolor=pink style=filled fillcolor=blue pos="6,5!"];
+		7 [fontcolor=pink style=filled fillcolor=black pos="9,5!"];
+		8 [fontcolor=pink style=filled fillcolor=black pos="4,8!"];
+		9 [fontcolor=pink style=filled fillcolor=black pos="9,10!"];
+	}
+	0 -- 3;
+	0 -- 5;
+	0 -- 8;
+	1 -- 6;
+	1 -- 7;
+	1 -- 2;
+	1 -- 9;
+	2 -- 9;
+	2 -- 1;
+	3 -- 0;
+	3 -- 4;
+	3 -- 6;
+	3 -- 5;
+	4 -- 3;
+	4 -- 7;
+	4 -- 6;
+	5 -- 0;
+	5 -- 3;
+	5 -- 8;
+	6 -- 3;
+	6 -- 4;
+	6 -- 7;
+	6 -- 1;
+	6 -- 8;
+	7 -- 4;
+	7 -- 1;
+	7 -- 6;
+	8 -- 0;
+	8 -- 5;
+	8 -- 6;
+	9 -- 1;
+	9 -- 2;
+}
