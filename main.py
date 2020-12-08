@@ -50,12 +50,12 @@ def parse_graph(filename):
     return graph
 
 
-# Calcule le degré d'un sommet vertex dans un graphe
+# Calcule le degré d'un sommet vertex dans un graphe. O(1)
 def degree(graph, vertex):
     return len(graph[vertex])
 
 
-# Retourne les couleurs de tous les sommets neighbours
+# Retourne les couleurs de tous les sommets neighbours. O(n)
 def neighbourhood_colors(neighbours, coloring):
     used_colors = set()
 
@@ -65,7 +65,7 @@ def neighbourhood_colors(neighbours, coloring):
     return used_colors
 
 
-# Supprime un sommet d'un graphe en se supprimant des liste d'adjacence des autres sommets
+# Supprime un sommet d'un graphe en se supprimant des liste d'adjacence des autres sommets. O(n*m) avec n le nombre de sommets, et m le nombre d'arrêtes
 def remove_vertex(graph, vertex):
     for v in graph:
         if vertex in graph[v]:
@@ -74,7 +74,7 @@ def remove_vertex(graph, vertex):
     return graph.pop(vertex)
 
 
-# Initie la couleur de chaque sommet à une couleur au 'hasard'. Chaque sommet aura la même couleur
+# Initie la couleur de chaque sommet à une couleur au 'hasard'. Chaque sommet aura la même couleur. O(n) avec n le nombre de sommets
 def init_colors(graph):
     coloring = {}
 
@@ -84,7 +84,7 @@ def init_colors(graph):
     return coloring
 
 
-# Teste si un chemin existe dans un graphe, à partir de starting_vertex jusqu'à vertex_to_find
+# Teste si un chemin existe dans un graphe, à partir de starting_vertex jusqu'à vertex_to_find. O(n*m)
 def get_path(graph, starting_vertex, vertex_to_find):
     visited = []
     queue = deque()
@@ -103,7 +103,7 @@ def get_path(graph, starting_vertex, vertex_to_find):
     return False
 
 
-# Parcours en profondeur à partir de starting_vertex
+# Parcours en profondeur à partir de starting_vertex. O(n*m)
 def breadth_first_search(graph, starting_vertex):
     visited = []
     queue = deque()
@@ -119,7 +119,7 @@ def breadth_first_search(graph, starting_vertex):
     return visited
 
 
-# Inverse les couleurs a et b d'un graphe.'coloring' correspond aux couleurs actuelles du graphe
+# Inverse les couleurs a et b d'un graphe.'coloring' correspond aux couleurs actuelles du graphe. O(n)
 def inverse_color(graph, coloring, color_a, color_b):
     for vertex in graph:
         if coloring[vertex] == color_a:
@@ -129,32 +129,32 @@ def inverse_color(graph, coloring, color_a, color_b):
     return coloring
 
 
-# Retourne une 5 coloration d'un graphe
-def coloring_rec(graph, coloring):
+# Retourne une 5 coloration d'un graphe.
+def coloring_rec(graph, coloring): 
     if graph:
-        for vertex in graph:
+        for vertex in graph: # O(n)
             if degree(graph, vertex) <= 5:
                 x = vertex  # On trouve un sommet de degré <= 5
                 break
 
-        deg_x = degree(graph, x)
-        neighbours = remove_vertex(graph, x)  # On supprime le sommet x et récupère son sommet
+        deg_x = degree(graph, x) # O(1)
+        neighbours = remove_vertex(graph, x)  # On supprime le sommet x et récupère son sommet . O(n*m)
         coloring_res = coloring_rec(graph, coloring)  # Appel récursif
 
         if deg_x < 5:
             # On applique la brique 4
             if coloring_res:
                 # On aura au minimum une couleur dans l'ensemble remaining_colors car il y a 5 couleurs et x a 4 voisins.
-                remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours, coloring_res)
-                coloring[x] = next(iter(remaining_colors))
+                remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours, coloring_res) # O(n)
+                coloring[x] = next(iter(remaining_colors)) # O(1)
         elif deg_x == 5:
             # On applique la brique 5 ou la brique 6
-            used_colors = neighbourhood_colors(neighbours, coloring_res)
+            used_colors = neighbourhood_colors(neighbours, coloring_res) # O(n)
             # On a seulement 5 couleurs différentes, donc si le nombre de couleur utilisées n'est pas < à 5, il est forcément égal.
             if len(used_colors) < 5: # S'il y a au moins une couleur disponbile
                 # On applique la brique 5
-                remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours, coloring_res)
-                coloring[x] = next(iter(remaining_colors))  # x prend la première couleur disponible
+                remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours, coloring_res) # O(n)
+                coloring[x] = next(iter(remaining_colors))  # x prend la première couleur disponible. # O(1)
             else: # S'il n'y a pas de couleurs disponibles
                 # On applique la brique 6
                 a = neighbours[0]
@@ -172,7 +172,7 @@ def coloring_rec(graph, coloring):
                 induced_subgraph_ag = {}  # Graphe induit de alpha gamma
                 induced_subgraph_bd = {}  # Graphe induit de beta delta
 
-                for k, v in graph.items():  # On trouves les deux graphes induits
+                for k, v in graph.items():  # On trouves les deux graphes induits. O(n)
                     if coloring_res[k] == alpha or coloring_res[k] == gamma:
                         induced_subgraph_ag[k] = v
                     if coloring_res[k] == beta or coloring_res[k] == delta:
@@ -180,23 +180,23 @@ def coloring_rec(graph, coloring):
 
                 if get_path(induced_subgraph_ag, a, c):  # S'il y a un chemin de a vers c
                     connected_component = breadth_first_search(induced_subgraph_bd,
-                                                               b)  # On prend la composante connexe G'(beta, delta) qui contient b
+                                                               b)  # On prend la composante connexe G'(beta, delta) qui contient b. O(n*m)
                     new_coloring = inverse_color(connected_component, coloring_res, beta,
-                                                 delta)  # On inverse les couleurs de G'(beta, delta)
+                                                 delta)  # On inverse les couleurs de G'(beta, delta). O(n)
                 else:  # S'il y a un chemin de b à d ou qu'il n'y a pas de chemin de a à c et de b à d
                     connected_component = breadth_first_search(induced_subgraph_ag,
-                                                               a)  # On prend la composante connexe G'(alpha, gamma) qui contient a
+                                                               a)  # On prend la composante connexe G'(alpha, gamma) qui contient a. O(n*m)
                     new_coloring = inverse_color(connected_component, coloring_res, alpha,
-                                                 gamma)  # On inverse les couleurs de G'(alpha, gamma)
+                                                 gamma)  # On inverse les couleurs de G'(alpha, gamma). O(n)
 
                 remaining_colors = AVAILABLE_COLORS - neighbourhood_colors(neighbours,
-                                                                           new_coloring)  # On récupère la couleur restante
-                coloring[x] = next(iter(remaining_colors))  # On la donne à x
+                                                                           new_coloring)  # On récupère la couleur restante. O(n*m)
+                coloring[x] = next(iter(remaining_colors))  # On la donne à x. O(1)
 
     return coloring
 
 
-# Vérifie que la coloration d'un graphe est correcte
+# Vérifie que la coloration d'un graphe est correcte. O(n*m)
 def check_coloring(graph, coloring):
     for v, e in graph.items():
         self_color = coloring[v]
@@ -250,13 +250,13 @@ def main():
         graph = parse_graph(nom_fichier + '.graphe')
         graph1 = copy.deepcopy(graph) # on crée un second graphe qui est une copie du premier, car ce dernier sera consumé par coloring_rec
         colors = coloring_rec(graph, init_colors(graph))
-        coords = parse_graph(nom_fichier + '.coords')
 
         if check_coloring(graph, colors):
             print('Voici la coloration trouvée : \n\n', colors)
             print()
 
             write_file(nom_fichier, colors)
+            coords = parse_graph(nom_fichier + '.coords')
             generate_dot(nom_fichier, colors, graph1, coords)
         else:
             print('Pas de coloration trouvée !')
